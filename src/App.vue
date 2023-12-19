@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import MainTabBar from "@/components/content/MainTabBar.vue";
+import MainTabBar from "@/components/content/MainTabBar/MainTabBar.vue";
 
 export default {
   components: {
@@ -18,4 +18,5 @@ export default {
 
 <style>
 @import "@/assets/css/base.css";
+@import url("//unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css");
 </style>
