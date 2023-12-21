@@ -1,13 +1,16 @@
 <template>
    <div>
-      <h1>分类</h1>
+      <scroll></scroll>
    </div>
 </template>
 
 <script>
+import Scroll from "@/components/common/scroll/Scroll.vue"
 export default {
    name: "TabBarCategory",
-
+  components:{
+     Scroll
+  },
    data() {
       return {};
    },
