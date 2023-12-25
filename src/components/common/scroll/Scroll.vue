@@ -33,14 +33,14 @@ export default {
     // 会按 document.querySelector('.wrapper') 进行查找
     // 创建BScroll对象
     this.bs = new BScroll('.wrapper', {
-      click:true, // 让视图内的点击事件生效
+      click: true, // 让视图内的点击事件生效
       probeType: this.probeType,
       pullUpLoad: true  // false会报错:找不到pullingUp事件
     })
 
     // 监听滚动事件
     this.bs.on('scroll', (position) => {
-      this.$emit('scroll',position)
+      this.$emit('scroll', position)
     })
 
     // 监听上拉事件
@@ -49,7 +49,15 @@ export default {
       // 完成，会刷新操作
       this.bs.finishPullUp()
     })
-  }
+  },
+  methods:{
+    // 刷新BScroll实例，重新计算滚动区域高度
+    refresh(){
+      // 当this.bs存在时
+      this.bs && this.bs.refresh()
+    }
+  },
+
 }
 </script>
 

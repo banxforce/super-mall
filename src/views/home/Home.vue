@@ -1,26 +1,40 @@
 <template>
   <div id="home">
     <!--  头部导航栏  -->
-    <nav-bar class="home-nav"></nav-bar>
-
+    <nav-bar class="home-nav">
+      <template v-slot:center>
+        购物街
+      </template>
+    </nav-bar>
+    <!--  标签栏,滚动后显示  -->
+    <TabControl
+        class="tab-control"
+        :titles="titles"
+        @tabControlClick="tabControlClick"
+        ref="tabControlUpper"/>
     <!--  滚动区域。原生滚动在移动端会出现卡顿  -->
     <scroll class="content"
             :probe-type="3"
             @scroll="contentScroll"
-            @pullingUp="loadMore">
+            @pullingUp="loadMore"
+            ref="scroll">
       <!--  轮播图  -->
-      <home-swiper :banners="banners"/>
+      <home-swiper :banners="banners" @swiperImgLoaded="swiperImgLoaded"/>
       <!--  推荐视图  -->
       <recommend-view :recommends="recommends"/>
       <!--  本周流行   -->
       <feature-view/>
-      <!--  标签栏  -->
-      <TabControl class="tab-control" :titles="titles" @tabControlClick="tabControlClick"/>
+      <!--  标签栏,初始显示  -->
+      <TabControl
+          class="tab-control"
+          :titles="titles"
+          @tabControlClick="tabControlClick"
+          ref="tabControlBelow"/>
       <!--  商品列表  -->
       <goods-list :list="showGoods"/>
     </scroll>
     <!--  返回顶部图标    -->
-    <back-top @click.native="backTop"/>
+    <back-top @click.native="backTop" v-show="backTopShow"/>
   </div>
 </template>
 
@@ -36,6 +50,7 @@ import {getHomeMultiData, getHomeGoods} from "@/network/home";
 import GoodsList from "@/components/content/goodsList/GoodsList.vue";
 import Scroll from "@/components/common/scroll/Scroll.vue";
 import BackTop from "@/components/content/backTop/BackTop.vue";
+
 export default {
   name: "TabBarHome",
   components: {
@@ -59,7 +74,9 @@ export default {
         'new': {page: 0, list: []},
         'sell': {page: 0, list: []}
       },
-      curType: 'pop'
+      curType: 'pop',
+      backTopShow: false,
+      tabControllerOffsetTop:null
     };
   },
   computed: {
@@ -77,7 +94,12 @@ export default {
     this.getHomeGoods('sell')
   },
   mounted() {
-
+    // 通过定义的防抖函数，调用组件内定义的刷新方法
+    const refresh = this.debounce(this.$refs.scroll.refresh)
+    // 监听事件总线上的指定事件
+    this.$bus.$on('imgLoaded', () => {
+      refresh()
+    })
   },
 
   methods: {
@@ -109,6 +131,25 @@ export default {
     /**
      * 事件监听相关的方法
      */
+    /**
+     * 防抖函数，setTimeout内的function会被放到事件循环末尾处理，所以即使没有delay,也不会立即执行
+     * @param func 要进行处理的函数
+     * @param delay 延时事件，单位ms。
+     * @return function (...ars) 处理完成的函数
+     */
+    debounce(func, delay) {
+      let timer = null
+      return function (...args) {
+        if (timer) {
+          clearTimeout(timer)
+        }
+        timer = setTimeout(() => {
+          // apply(方法内this的指向,参数)
+          func.apply(this, args)
+        }, delay)
+      }
+    },
+    // 标签栏点击事件
     tabControlClick(index) {
       switch (index) {
         case 0:
@@ -123,20 +164,27 @@ export default {
       }
     },
     // 滚动监听事件调用
-    contentScroll(position){
-      // console.log(position);
+    contentScroll(position) {
+      //console.log(position);
+      this.backTopShow = position.y < 0
     },
     // 上拉加载事件调用
-    loadMore(){
-      console.log("加载更多");
+    loadMore() {
+      // 加载数据
+      this.getHomeGoods(this.curType)
     },
     // 回到顶部 组件点击事件调用
     backTop() {
       /* ref 作用在普通元素上，用this.$ref.name 获取dom元素；
        * ref 作用子组件上，用this.$ref.name 获取到组件实例，可以使用组件所有方法。*/
       // 这个组件内引入了 BScroll框架并实例化后挂载在了Vue上，所以 隐式的把自己暴露给了$refs
-      this.$refs.bs.scrollTo(0,0)
+      this.$refs.scroll.bs.scrollTo(0, 0)
     },
+    // 轮播图加载完之后获取tabController的offsetTop
+    swiperImgLoaded(){
+      // .$el 得到组件内的元素
+      this.tabControllerOffsetTop = this.$refs.tabControlBelow.$el.offsetTop;
+    }
 
   }
 }
@@ -153,6 +201,8 @@ export default {
   background-color: var(--color-tint);
   color: #fff;
 
+  /* 使用浏览器原生滚动的才需要
+  */
   position: fixed;
   left: 0;
   right: 0;
@@ -160,11 +210,7 @@ export default {
   z-index: 9;
 }
 
-.tab-control {
-  position: sticky;
-  top: 44px;
-  z-index: 9;
-}
+
 
 /*为滚动区域设置绝对区域*/
 .content {
