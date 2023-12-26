@@ -1,5 +1,5 @@
 <template>
-  <div class="goods-item">
+  <div class="goods-item" @click="itemClick">
     <img :src="goodsItem.show.img" alt="" @load="imgLoad">
     <div class="goods-info">
       <p>{{ goodsItem.title }}</p>
@@ -14,9 +14,19 @@ export default {
   name: 'GoodsListItem',
   props: ['goodsItem'],
   methods: {
+    // 图标加载完毕
     imgLoad() {
       // 通过事件总线发布事件
       this.$bus.$emit('imgLoaded')
+    },
+    // 组件被点击时
+    itemClick(){
+      this.$router.push({
+          path: "/detail",
+          query:{
+            iid: this.goodsItem.iid
+          }
+      })
     }
   }
 }

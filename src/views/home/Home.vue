@@ -11,7 +11,8 @@
         class="tab-control"
         :titles="titles"
         @tabControlClick="tabControlClick"
-        ref="tabControlUpper"/>
+        ref="tabControlUpper"
+        v-show="showTabControlBefore"/>
     <!--  滚动区域。原生滚动在移动端会出现卡顿  -->
     <scroll class="content"
             :probe-type="3"
@@ -76,9 +77,15 @@ export default {
       },
       curType: 'pop',
       backTopShow: false,
-      tabControllerOffsetTop:null
+      tabControlOffsetTop:null,
+      showTabControlBefore:false,
+      curPosition:{
+        x:0,
+        y:0
+      }
     };
   },
+
   computed: {
     showGoods() {
       return this.goods[this.curType].list
@@ -92,10 +99,12 @@ export default {
     this.getHomeGoods('pop')
     this.getHomeGoods('new')
     this.getHomeGoods('sell')
+
+    // console.log(this.goods);
   },
   mounted() {
     // 通过定义的防抖函数，调用组件内定义的刷新方法
-    const refresh = this.debounce(this.$refs.scroll.refresh)
+    const refresh = this.debounce(this.getScroll().refresh)
     // 监听事件总线上的指定事件
     this.$bus.$on('imgLoaded', () => {
       refresh()
@@ -165,8 +174,12 @@ export default {
     },
     // 滚动监听事件调用
     contentScroll(position) {
-      //console.log(position);
+      // 当上拉时
       this.backTopShow = position.y < 0
+      // 当滚动到对应位置时改变值
+      this.showTabControlBefore = -position.y >= this.tabControlOffsetTop
+      // 存储当前位置
+      this.curPosition = position
     },
     // 上拉加载事件调用
     loadMore() {
@@ -175,18 +188,28 @@ export default {
     },
     // 回到顶部 组件点击事件调用
     backTop() {
-      /* ref 作用在普通元素上，用this.$ref.name 获取dom元素；
-       * ref 作用子组件上，用this.$ref.name 获取到组件实例，可以使用组件所有方法。*/
-      // 这个组件内引入了 BScroll框架并实例化后挂载在了Vue上，所以 隐式的把自己暴露给了$refs
-      this.$refs.scroll.bs.scrollTo(0, 0)
+      this.getScroll().scrollTo(0, 0,300)
     },
     // 轮播图加载完之后获取tabController的offsetTop
     swiperImgLoaded(){
       // .$el 得到组件内的元素
-      this.tabControllerOffsetTop = this.$refs.tabControlBelow.$el.offsetTop;
+      this.tabControlOffsetTop = this.$refs.tabControlBelow.$el.offsetTop;
+    },
+    // 获取Scroll组件
+    getScroll(){
+      /* ref 作用在普通元素上，用this.$ref.name 获取dom元素；
+       * ref 作用子组件上，用this.$ref.name 获取到组件实例，可以使用组件所有方法。*/
+      // 这个组件内引入了 BScroll框架并实例化后挂载在了Vue上，所以 隐式的把自己暴露给了$refs
+      return this.$refs.scroll
     }
+  },
 
-  }
+  // 回到页面时回到离开前的位置，页面为活跃状态时,新版BScroll以及修复，不需要自己实现
+  // activated() {
+  //   this.getScroll().scrollTo(this.curPosition.x,this.curPosition.y,300)
+  // },
+
+
 }
 </script>
 
@@ -210,8 +233,6 @@ export default {
   z-index: 9;
 }
 
-
-
 /*为滚动区域设置绝对区域*/
 .content {
   overflow: hidden;
@@ -223,6 +244,10 @@ export default {
   right: 0;
 }
 
+.tab-control{
+  position: relative;
+  z-index: 9;
+}
 
 /*.content {*/
 /*height: calc(100% - 93px);*/

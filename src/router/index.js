@@ -21,6 +21,11 @@ const routes = [
       path: "/profile",
       component: () => import('@/views/profile/Profile.vue'),
    },
+   {
+      path: "/detail",
+      component: () => import('@/views/detail/Detail.vue'),
+      props: route => ({ iid: route.query.iid })
+   }
 ];
 
 const router = new VueRouter({

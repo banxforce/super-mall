@@ -40,21 +40,29 @@ export default {
 
     // 监听滚动事件
     this.bs.on('scroll', (position) => {
-      this.$emit('scroll', position)
+      // 当this.bs存在时
+      this.bs && this.$emit('scroll', position)
     })
 
     // 监听上拉事件
     this.bs.on("pullingUp", () => {
-      this.$emit('pullingUp')
-      // 完成，会刷新操作
-      this.bs.finishPullUp()
+      // 当this.bs存在时
+      if (this.bs) {
+        this.$emit('pullingUp')
+        // 完成，会刷新操作
+        this.bs.finishPullUp()
+      }
     })
   },
-  methods:{
+  methods: {
     // 刷新BScroll实例，重新计算滚动区域高度
-    refresh(){
+    refresh() {
       // 当this.bs存在时
       this.bs && this.bs.refresh()
+    },
+    scrollTo(x, y, time) {
+      // 当this.bs存在时
+      this.bs && this.bs.scrollTo(x, y, time)
     }
   },
 
