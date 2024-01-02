@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <keep-alive>
+<!--  详情页每次点击需要重新创建  -->
+    <keep-alive exclude="Detail">
       <router-view/>
     </keep-alive>
     <main-tab-bar/>
